@@ -3,10 +3,10 @@ import certifi
 import json
 import sys
 import getopt
+import yaml
 
-def count_pull_requests(project, repositoryId, date):
+def count_pull_requests(accountName, project, repositoryId, date):
     limit = 100
-    accountName = 'skfdc'
     status = 'completed'
     url ='https://{}.visualstudio.com/{}/_apis/git/repositories/{}/pullrequests?api-version=4.1&$top={}&searchCriteria.status={}'.format(accountName, project, repositoryId, limit, status)
 
@@ -36,23 +36,15 @@ def main(argv):
     date = str(sys.argv[1])
     print('*** PULL REQUEST REPORT {} ***\n'.format(date))
 
-    project = 'EnlightCentre'
-    repositories = ['analyze-prognose', 'routes']
-
     totalCount = 0
 
-    for repo in repositories:
-        count = count_pull_requests(project, repo, date)
-        print('{} PRs completed in {}'.format(count, repo))
-        totalCount += count
-
-    project = 'REP-SW'
-    repositories = ['enlight-iot-event-hub', 'analyze-functional-location']
-
-    for repo in repositories:
-        count = count_pull_requests(project, repo, date)
-        print('{} PRs completed in {}'.format(count, repo))
-        totalCount += count
+    config = yaml.safe_load(open('config.yml'))
+    for account in config:
+        for project in config[account]:
+            for repositoryId in config[account][project].split():
+                count = count_pull_requests(account, project, repositoryId, date)
+                print('{} PRs completed in {}'.format(count, repositoryId))
+                totalCount += count
 
     print('\n***************\n')
     print('{} PRs completed in total!'.format(totalCount))
