@@ -1,29 +1,30 @@
 import urllib.request
-import certifi
 import json
 import sys
-import getopt
 import yaml
+import certifi
 
 def count_pull_requests(accountName, project, repositoryId, date):
     limit = 100
     status = 'completed'
-    url ='https://{}.visualstudio.com/{}/_apis/git/repositories/{}/pullrequests?api-version=4.1&$top={}&searchCriteria.status={}'.format(accountName, project, repositoryId, limit, status)
+    url = 'https://{}.visualstudio.com/{}/_apis/git/repositories/{}/pullrequests?api-version=4.1&$top={}&searchCriteria.status={}'.format(
+        accountName, project, repositoryId, limit, status
+    )
 
-    with open('cookie.txt') as f:
-        cookie = f.read()
+    with open('cookie.txt') as cookie_file:
+        cookie = cookie_file.read()
 
-    headers = { 'Cookie' : cookie }
+    headers = {'Cookie' : cookie}
 
     req = urllib.request.Request(url, None, headers)
     response = urllib.request.urlopen(req, cafile=certifi.where())
     html = response.read()
 
-    jsonResponse = json.loads(html.decode('utf-8'))
+    json_response = json.loads(html.decode('utf-8'))
 
     count = 0
 
-    for item in jsonResponse['value']:
+    for item in json_response['value']:
         if item['status'] == status and item['closedDate'].startswith(date):
             count += 1
 
@@ -36,18 +37,18 @@ def main(argv):
     date = str(sys.argv[1])
     print('*** PULL REQUEST REPORT {} ***\n'.format(date))
 
-    totalCount = 0
+    total_count = 0
 
     config = yaml.safe_load(open('config.yml'))
     for account in config:
         for project in config[account]:
-            for repositoryId in config[account][project].split():
-                count = count_pull_requests(account, project, repositoryId, date)
-                print('{} PRs completed in {}'.format(count, repositoryId))
-                totalCount += count
+            for repository_id in config[account][project].split():
+                count = count_pull_requests(account, project, repository_id, date)
+                print('{} PRs completed in {}'.format(count, repository_id))
+                total_count += count
 
     print('\n***************\n')
-    print('{} PRs completed in total!'.format(totalCount))
+    print('{} PRs completed in total!'.format(total_count))
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
