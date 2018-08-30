@@ -5,7 +5,7 @@ import yaml
 import certifi
 
 def count_pull_requests(accountName, project, repositoryId, date):
-    limit = 100
+    limit = -1 # -1 means return all
     status = 'completed'
     url = 'https://{}.visualstudio.com/{}/_apis/git/repositories/{}/pullrequests?api-version=4.1&$top={}&searchCriteria.status={}'.format(
         accountName, project, repositoryId, limit, status
