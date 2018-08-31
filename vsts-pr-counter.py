@@ -1,5 +1,7 @@
 import urllib.request
+from urllib.error import URLError, HTTPError
 import json
+from json import JSONDecodeError
 import sys
 import yaml
 import certifi
@@ -17,16 +19,33 @@ def count_pull_requests(accountName, project, repositoryId, date):
     headers = {'Cookie' : cookie}
 
     req = urllib.request.Request(url, None, headers)
-    response = urllib.request.urlopen(req, cafile=certifi.where())
+
+    try:
+        response = urllib.request.urlopen(req, cafile=certifi.where())
+    except HTTPError as error:
+        print('Error while getting response from VSTS. Error code: ', error.code, error.reason)
+        sys.exit(2)
+    except URLError as error:
+        print('Error: ', error.reason)
+        sys.exit(2)
+
     html = response.read()
 
-    json_response = json.loads(html.decode('utf-8'))
+    try:
+        json_response = json.loads(html.decode('utf-8'))
+    except JSONDecodeError as error:
+        print("Error decoding json response: ", error)
+        sys.exit(2)
 
     count = 0
 
-    for item in json_response['value']:
-        if item['status'] == status and item['closedDate'].startswith(date):
-            count += 1
+    try:
+        for item in json_response['value']:
+            if item['status'] == status and item['closedDate'].startswith(date):
+                count += 1
+    except KeyError as error:
+        print("Invalid json response: {} not found".format(error))
+        sys.exit(2)
 
     if count == limit:
         print('WARNING! You need to increase limit, some PRs might not have been counted')
@@ -39,13 +58,25 @@ def main(argv):
 
     total_count = 0
 
-    config = yaml.safe_load(open('config.yml'))
-    for account in config:
-        for project in config[account]:
-            for repository_id in config[account][project].split():
-                count = count_pull_requests(account, project, repository_id, date)
-                print('{} PRs completed in {}'.format(count, repository_id))
-                total_count += count
+    try:
+        config = yaml.safe_load(open('config.yml'))
+    except FileNotFoundError:
+        print("You need to provide a config.yml file. Please see README for details.")
+        sys.exit(2)
+
+    try:
+        for account in config:
+            for project in config[account]:
+                for repository_id in config[account][project].split():
+                    count = count_pull_requests(account, project, repository_id, date)
+                    print('{} PRs completed in {}'.format(count, repository_id))
+                    total_count += count
+    except TypeError:
+        print("Invalid config.yml file. Please see README for details.")
+        sys.exit(2)
+    except AttributeError:
+        print("Invalid config.yml file (You didn't provide any repositories). Please see README for details.")
+        sys.exit(2)
 
     print('\n***************\n')
     print('{} PRs completed in total!'.format(total_count))
