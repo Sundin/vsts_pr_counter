@@ -1,10 +1,10 @@
 import urllib.request
 from urllib.error import URLError, HTTPError
+import ssl
 import json
 from json import JSONDecodeError
 import sys
 import yaml
-import certifi
 
 def count_pull_requests(accountName, project, repositoryId, date):
     limit = -1 # -1 means return all
@@ -19,9 +19,10 @@ def count_pull_requests(accountName, project, repositoryId, date):
     headers = {'Cookie' : cookie}
 
     req = urllib.request.Request(url, None, headers)
+    sslContext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
     try:
-        response = urllib.request.urlopen(req, cafile=certifi.where())
+        response = urllib.request.urlopen(req, context=sslContext)
     except HTTPError as error:
         print('Error while getting response from VSTS. Error code: ', error.code, error.reason)
         sys.exit(2)
