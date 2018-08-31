@@ -1,4 +1,4 @@
-# VSTS-PR-COUNTER
+# VSTS_PR_COUNTER
 The purpose of this repository is to count the number of completed pull requests in or more VSTS projects on a given date.
 
 ## Requirements
@@ -24,7 +24,7 @@ accountName:
 ```
 
 Run the program with this command:  
-`python vsts-pr-counter.py 2018-08-28`  
+`python vsts_pr_counter.py 2018-08-28`  
 (replace with the date you are interested, in format YYY-MM-DD).
 
 ## Usage using virtualenv

@@ -6,11 +6,11 @@ from json import JSONDecodeError
 import sys
 import yaml
 
-def count_pull_requests(accountName, project, repositoryId, date):
+def count_pull_requests(account_name, project, repository_id, date):
     limit = -1 # -1 means return all
     status = 'completed'
     url = 'https://{}.visualstudio.com/{}/_apis/git/repositories/{}/pullrequests?api-version=4.1&$top={}&searchCriteria.status={}'.format(
-        accountName, project, repositoryId, limit, status
+        account_name, project, repository_id, limit, status
     )
 
     with open('cookie.txt') as cookie_file:
@@ -19,10 +19,10 @@ def count_pull_requests(accountName, project, repositoryId, date):
     headers = {'Cookie' : cookie}
 
     req = urllib.request.Request(url, None, headers)
-    sslContext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
     try:
-        response = urllib.request.urlopen(req, context=sslContext)
+        response = urllib.request.urlopen(req, context=ssl_context)
     except HTTPError as error:
         print('Error while getting response from VSTS. Error code: ', error.code, error.reason)
         sys.exit(2)
